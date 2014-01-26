@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html manifest="busdoco_local.manifest">
+
+<head>
+
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+<title>ののいちバスはいまどこ？　オフライン対応版</title>
+
+<script src="jquery-1.6.2.min.js"></script>
+
+<script type="text/javascript">
+
+
+//設定変更エリア*********
+var xml_data   = "time_table.xml";
+var cont_ver   = "ver. 0.7";
+var infomation = "HTML5 manifest に対応しているブラウザでは、オフラインで表示することができます。<br />"
++"また、オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。";
+//本ファイル、データファイルなどを変更した場合は、マニフェストファイルも変更すること
+//manifest = "busdoco_local.manifest"
+//*********************
+
+function getRoot(url){
+	$.ajax({type: "GET", url: url ,	dataType: "xml", error : function(){ alert("抽出エラー");}
+	,
+
+  	success: function(xml){
+	//ルート名・コードを抽出し、SELECT ボックスに設定
+	var var_root_no;
+
+	$(xml).find('[nodeName="time_table"]').each(function(){
+
+		$(this).find("root_info").each(function(){
+			wopt = document.createElement('option');
+			var_root_no = $(this).attr("root_no");
+
+			wopt.setAttribute('value', $(this).attr("root_no"));
+			$(wopt).append($(this).attr("bus_type"));
+			$(wopt).append($(this).attr("root_name"));
+			$('#root').append(wopt);
+			Rivisionday[var_root_no] = $(this).attr("rivisionday");  
+		});
+	});
+
+	$('#root').bind('change', selectRoot);
+
+	}//end access:
+	});//end ajax
+}
+
+
+
+function getStop(url){
+	$.ajax({ type: "GET", url: url , dataType: "xml", error : function(){ alert("抽出エラー");}
+	,
+
+  	success: function(xml){
+	//ルートコードからバス停名を抽出し、SELECT ボックスに設定
+	$(xml).find('[nodeName="root_info"]').each(function(){
+
+		if($(this).attr("root_no") == Root_no){
+			$(this).find("bus_stop_info").each(function(){
+				wopt = document.createElement('option');
+				stop_no = $(this).attr("bus_stop_no");
+				wopt.setAttribute('value' , stop_no);
+
+				$(wopt).append(stop_no + ":");
+				$(wopt).append($(this).attr("bus_stop_name"));
+				$('#stop').append(wopt);
+			});
+		}//end if
+	});
+
+	$('#stop').bind('change', selectStop);
+
+	}//end access:
+	});//end ajax
+
+}
+
+
+
+function getTime(url){
+	$.ajax({ type: "GET", url: url , dataType: "xml", error : function(){ alert("抽出エラー"); }
+	,
+
+  	success: function(xml){
+	var buff = "";
+	var time = "";
+	var root_bus_no = "";
+
+	//ルートコード、バス停コードからバス停時刻表を抽出し、SELECT ボックスに設定
+	$(xml).find('[nodeName="root_info"]').each(function(){
+
+		if($(this).attr("root_no") == Root_no){
+			$(this).find("bus_stop_info").each(function(){
+
+				if($(this).attr("bus_stop_no") == Root_stop_no){
+					$(this).find('[nodeName="time_data"]').each(function(){
+						root_bus_no = $(this).attr("root_bus_no");
+						time  = $(this).attr("bus_start_time");
+
+						if(time == "00:00:00"){
+							time = $(this).attr("bus_arive_time");
+						}
+
+						buff += "<a href='#' onclick='view_bus_no(" + root_bus_no + ")'>";
+						buff += root_bus_no + "便　";
+						buff += time.substr(0,time.length -3);
+						buff += "</a>";
+						buff += "<br />";
+					});
+				} //end if
+			});
+		}//end if
+	});
+
+	document.getElementById("time_table").innerHTML = buff;
+
+	}//end saccess:
+	});//end ajax
+}
+
+function clearBusTime(){
+	document.getElementById("bus_no_time").innerHTML = "";
+}
+
+
+function getBusTime(url){
+	$.ajax({ type: "GET", url: url , dataType: "xml", error : function(){ alert("抽出エラー"); }
+	,
+
+  	success: function(xml){
+	var title = Root_bus_no + "便　" + "<input type='button' value='close' onclick='clearBusTime()'><br />";
+	var buff  = title;
+	var bus_stop_name = "";
+	var bus_stop_no = "";
+	var time = "";
+
+	//ルートコード、バス停コードからバス停時刻表を抽出し、SELECT ボックスに設定
+	$(xml).find('[nodeName="root_info"]').each(function(){
+		if($(this).attr("root_no") == Root_no){
+			$(this).find("bus_stop_info").each(function(){
+						
+				bus_stop_name = $(this).attr("bus_stop_name");
+				bus_stop_no   = $(this).attr("bus_stop_no");
+
+				$(this).find('[nodeName="time_data"]').each(function(){
+					if($(this).attr("root_bus_no") == Root_bus_no){
+						time  = $(this).attr("bus_start_time");
+						if(time == "00:00:00"){
+							time = $(this).attr("bus_arive_time");
+						}
+
+						buff += time.substr(0,time.length -3);
+
+						if(bus_stop_no == Root_stop_no){
+							buff += "　●";
+						}else{
+							buff += "　";
+						}
+
+						buff += bus_stop_name;
+						buff += "<br />";
+					} //end if
+				});
+			});
+		}//end if
+
+	});
+	document.getElementById("bus_no_time").innerHTML = buff + title + "<br />";
+
+	}//end access:
+	});//end ajax
+}
+
+
+
+
+
+var Root_no;
+
+var Root_stop_no;
+var Root_bus_no;
+
+//var Update;
+var Rivisionday = new Array();
+
+
+
+function init(){
+	document.getElementById("cont_ver").innerHTML = cont_ver;
+	getRoot(xml_data);
+
+}
+
+
+function view_bus_no(no){
+	Root_bus_no = no;
+	getBusTime(xml_data);
+}
+
+
+function clearStop(){
+
+	var emt = document.getElementById("stop");
+
+	var lng = emt.options.length;
+
+	for( i = 0 ; i < lng ; i++){
+
+		emt.remove('option');
+
+	}
+
+
+	wopt = document.createElement('option');
+
+	wopt.setAttribute('value' , "00");
+
+	$(wopt).append("-----バス停-----　　");
+
+	$('#stop').append(wopt);
+
+}
+
+
+
+function selectRoot(){
+
+	clearStop();
+	//clearTime_table
+	document.getElementById("time_table").innerHTML = "";
+
+	//clearBusTime
+	document.getElementById("bus_no_time").innerHTML = "";
+
+
+	var emt   = document.getElementById("root");
+
+	var index = emt.selectedIndex;
+
+	Root_no   = emt.options[index].value;
+
+
+
+	getStop(xml_data);
+
+	document.getElementById("rivisionday").innerHTML = "改正：" + Rivisionday[Root_no];
+
+}
+
+
+
+function selectStop(){
+	//clearBusTime
+	document.getElementById("bus_no_time").innerHTML = "";
+
+
+	var emt   = document.getElementById("stop");
+
+	var index = emt.selectedIndex;
+
+	Root_stop_no = emt.options[index].value;
+
+
+
+	getTime(xml_data);
+
+}
+
+function show_info(){
+	document.getElementById("info").innerHTML = infomation;
+	document.getElementById("info_btn").value = "閉じる";
+	document.getElementById("info_btn").onclick = new Function("hide_info()");
+}
+
+function hide_info(){
+	document.getElementById("info").innerHTML = "";
+	document.getElementById("info_btn").value = "説明";
+	document.getElementById("info_btn").onclick = new Function("show_info()");
+}
+
+</script>
+
+<style type="text/css">
+
+
+</style>
+
+</head>
+
+
+
+<body onload="init()">
+
+
+<div id="header_box">
+バスは今どこ？時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
+	<div id="cont_ver">version</div>
+	<div id="info"></div>
+</div>
+
+<div id="root_box">
+<form name="data" id="data">
+<select id="root"><option value="00" selected>-----ルート-----　　</option></select>
+</div>
+<div id="stop_box">
+<select id="stop"><option value="00" selected>-----バス停-----　　</option></select>
+</div>
+<div id="time_box">
+	<div id="bus_no_time"></div>
+	<div id="time_table"></div>
+</div>
+<div id="footer_box">
+<td><div id="rivisionday"></div>
+</form>
+</div>
+
+
+</body>
+
+</html>
+
