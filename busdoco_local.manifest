@@ -1,9 +1,9 @@
 CACHE MANIFEST
-# ver. 0.7
+# ver. 0.95
 # time_tableを変更した場合は、必ずこのマニフェストファイルの内容を変更すること
 CACHE:
-time_table.xml
-jquery-1.6.2.min.js
+#time_table.xml
+#jquery-1.6.2.min.js
 NETWORK:
 # 今回は指定しません 
 FALLBACK:

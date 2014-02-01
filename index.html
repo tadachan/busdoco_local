@@ -1,13 +1,14 @@
 <!DOCTYPE HTML>
+<!--html-->
 <html manifest="busdoco_local.manifest">
 
 <head>
 
-<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=yes" />
 
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 
-<title>ののいちバスはいまどこ？　オフライン対応版</title>
+<title>ののいち　バス時刻表</title>
 
 <script src="jquery-1.6.2.min.js"></script>
 
@@ -16,12 +17,67 @@
 
 //設定変更エリア*********
 var xml_data   = "time_table.xml";
-var cont_ver   = "ver. 0.7";
-var infomation = "HTML5 manifest に対応しているブラウザでは、オフラインで表示することができます。<br />"
-+"また、オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。";
+var cont_ver   = "ver. 0.95";
+var infomation = ""
++"・このアプリは、<a href='http://www.city.nonoichi.lg.jp/shiminkyoudou/opendata/opendata_top.html' target='_blank'>野々市市のオープンデータ</a>を活用しています。<br />"
++"・年末年始は、一部のバス便が運休となりますので、ご注意ください。<a href='http://www.city.nonoichi.lg.jp/kikaku/kotsu/notty.html' target='_blank'>野々市市のＨＰ参照</a><br />"
++"・HTML5 manifest に対応しているブラウザでは、オフラインで表示することができます。<br />"
++"・オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。<br />"
++"";
 //本ファイル、データファイルなどを変更した場合は、マニフェストファイルも変更すること
 //manifest = "busdoco_local.manifest"
-//*********************
+//***********************
+
+//ルート別カラー設定*****
+//function getRoot()　内のみで使用するデータ
+var bc = new Array();
+//        bg:back         txt:text
+bc[0] = { bg: '#ffffff' , txt: '#000000'};	//--------
+bc[1] = { bg: '#339933' , txt: '#ffffff'};	//root_no =1 北部ルート
+bc[2] = { bg: '#ff0033' , txt: '#ffffff'};	//root_no =2 中央ルート
+bc[3] = { bg: '#ffcc00' , txt: '#000000'};	//root_no =3 南部ルート
+bc[4] = { bg: '#66ccff' , txt: '#000000'};	//root_no =4 西部ルート
+bc[5] = { bg: '#cc00ff' , txt: '#ffffff'};	//root_no =5 のんキー下り
+bc[6] = { bg: '#cc55ff' , txt: '#000000'};	//root_no =6 のんキー上り
+var bc_style = '/*border:1px #ffb366 solid;*/ padding:10px; height:30px; vertical-align: middle;  text-align: center;';
+
+//バス便エリアの装飾
+var no_border  = "text-align:center; padding:5px;";
+var this_stop  = "<font color='red'>●</font>";
+var other_stop = "　";
+//***********************
+
+//******* cookie ********
+//favorite max 4個
+var MyFav_count = 4;
+var MyFavStop = new Array();
+MyFavStop[1] = {root: 2 , stop:  5 , name: '堀内東'};
+MyFavStop[2] = {root: 4 , stop: 10 , name: '万葉台'};
+MyFavStop[3] = {root: 5 , stop: 15 , name: '白山野々市広域消防本部Ａ'};
+MyFavStop[4] = {root: 6 , stop:  4 , name: '粟田'};
+//***********************
+function getMyFav(){
+	for(var i = 1; i<= MyFav_count ; i++){		
+		MyFavStop[i]['root'] = getCookie("root"+i);
+		MyFavStop[i]['stop'] = getCookie("stop"+i);
+		MyFavStop[i]['name'] = getCookie("name"+i);
+	}
+}
+
+function getNowTime(){
+	var DD = new Date();
+	var Hours = DD.getHours();
+	var Minutes = DD.getMinutes();
+	var Seconds = DD.getSeconds();
+
+	//2けた表示
+	if(Hours < 10) Hours = "0" + Hours;
+	if(Minutes < 10) Minutes = "0" + Minutes;
+
+	//document.write(Hours,"時",Minutes,"分",Seconds,"秒");
+	var time_line = "現在時間　" + Hours + ":" + Minutes ;
+	return time_line;
+}
 
 function getRoot(url){
 	$.ajax({type: "GET", url: url ,	dataType: "xml", error : function(){ alert("抽出エラー");}
@@ -34,18 +90,36 @@ function getRoot(url){
 	$(xml).find('[nodeName="time_table"]').each(function(){
 
 		$(this).find("root_info").each(function(){
+			/*
 			wopt = document.createElement('option');
 			var_root_no = $(this).attr("root_no");
 
 			wopt.setAttribute('value', $(this).attr("root_no"));
 			$(wopt).append($(this).attr("bus_type"));
 			$(wopt).append($(this).attr("root_name"));
+
+			//option area color set***
+			wopt.setAttribute('style' , 'background-color : ' + bc[var_root_no]['bg'] + "; color:" +  bc[var_root_no]['txt']);
+
+			//************
+			*/
+
+			wopt = document.createElement('div');
+			var_root_no = $(this).attr("root_no");
+
+			$(wopt).append($(this).attr("bus_type"));
+			$(wopt).append($(this).attr("root_name"));
+
+			wopt.setAttribute('style' , bc_style + 'background-color : ' + bc[var_root_no]['bg'] + "; color:" +  bc[var_root_no]['txt']);
+
+			wopt.setAttribute('onclick' , 'selectRoot(' + var_root_no + ');');
+			wopt.setAttribute('id' , 'root_' + var_root_no);
 			$('#root').append(wopt);
 			Rivisionday[var_root_no] = $(this).attr("rivisionday");  
 		});
 	});
 
-	$('#root').bind('change', selectRoot);
+	//$('#root').bind('change', selectRoot);
 
 	}//end access:
 	});//end ajax
@@ -126,6 +200,8 @@ function getTime(url){
 
 function clearBusTime(){
 	document.getElementById("bus_no_time").innerHTML = "";
+	document.getElementById("bus_no_time").style.visibility="hidden";
+
 }
 
 
@@ -134,7 +210,7 @@ function getBusTime(url){
 	,
 
   	success: function(xml){
-	var title = Root_bus_no + "便　" + "<input type='button' value='close' onclick='clearBusTime()'><br />";
+	var title = "<div style='" + no_border + " background:" + bc[Root_no]['bg'] + "; color:" + bc[Root_no]['txt'] + ";'>" + Root_bus_no + "便　" + "<input type='button' value='閉じる' onclick='clearBusTime()'></div>";
 	var buff  = title;
 	var bus_stop_name = "";
 	var bus_stop_no = "";
@@ -158,9 +234,11 @@ function getBusTime(url){
 						buff += time.substr(0,time.length -3);
 
 						if(bus_stop_no == Root_stop_no){
-							buff += "　●";
+							//buff += "　●";
+							buff += this_stop;
 						}else{
-							buff += "　";
+							//buff += "　";
+							buff += other_stop;
 						}
 
 						buff += bus_stop_name;
@@ -171,7 +249,8 @@ function getBusTime(url){
 		}//end if
 
 	});
-	document.getElementById("bus_no_time").innerHTML = buff + title + "<br />";
+	document.getElementById("bus_no_time").innerHTML = buff + title + "";
+	document.getElementById("bus_no_time").style.visibility="visible";
 
 	}//end access:
 	});//end ajax
@@ -195,8 +274,41 @@ function init(){
 	document.getElementById("cont_ver").innerHTML = cont_ver;
 	getRoot(xml_data);
 
+	//バス停 select　バス便　box　非表示
+	document.getElementById("stop").style.visibility="hidden";
+	document.getElementById("bus_no_time").style.visibility="hidden";
+
+	//*** cookie *****
+	getMyFav();
+
+	var fav_i;
+	var fav_name;
+	var st;
+	for(i=1 ; i<=MyFav_count ;i++){
+		if(MyFavStop[i]['name'] != ""){
+			//document.getElementById("fav"+i).innerHTML = MyFavStop[i]['name'].substr(0,4);
+			fav_i = document.getElementById("fav"+i);
+
+			//バス停名から頭の数字：を削除する
+			fav_name = MyFavStop[i]['name'];
+			//: の位置を見つける
+			st = fav_name.indexOf(":",0);
+			if(st > 0) st++;
+
+			//バス停名の長さを制限　５文字
+			fav_i.innerHTML = fav_name.substr(st,5);
+
+			fav_i.style.background = bc[MyFavStop[i]['root']]['bg'];			
+			fav_i.style.color      = bc[MyFavStop[i]['root']]['txt'];			
+		}
+	}
+	//****************
+
 }
 
+function resetRoot(){
+	location.reload();
+}
 
 function view_bus_no(no){
 	Root_bus_no = no;
@@ -211,9 +323,7 @@ function clearStop(){
 	var lng = emt.options.length;
 
 	for( i = 0 ; i < lng ; i++){
-
 		emt.remove('option');
-
 	}
 
 
@@ -229,7 +339,7 @@ function clearStop(){
 
 
 
-function selectRoot(){
+function selectRoot(no){
 
 	clearStop();
 	//clearTime_table
@@ -237,16 +347,28 @@ function selectRoot(){
 
 	//clearBusTime
 	document.getElementById("bus_no_time").innerHTML = "";
+	document.getElementById("bus_no_time").style.visibility="hidden";
 
 
-	var emt   = document.getElementById("root");
+	Root_no = no;	
+	var copy  = document.getElementById("select_root");
+	var souce = document.getElementById("root_" + Root_no);
 
-	var index = emt.selectedIndex;
+	//add on messege
+	var add_Msg = '<br /><font size="1">（クリックでルート選択）</font>';
+	
 
-	Root_no   = emt.options[index].value;
+	//select root css all copy
+	copy.innerHTML        = souce.innerHTML + add_Msg;
+	copy.style.cssText    = souce.style.cssText;
 
+	//root block none
+	document.getElementById("root").style.display = "none";
 
+	//バス停 select　表示
+	document.getElementById("stop").style.visibility="visible";
 
+	//
 	getStop(xml_data);
 
 	document.getElementById("rivisionday").innerHTML = "改正：" + Rivisionday[Root_no];
@@ -258,7 +380,7 @@ function selectRoot(){
 function selectStop(){
 	//clearBusTime
 	document.getElementById("bus_no_time").innerHTML = "";
-
+	document.getElementById("bus_no_time").style.visibility="hidden";
 
 	var emt   = document.getElementById("stop");
 
@@ -266,11 +388,12 @@ function selectStop(){
 
 	Root_stop_no = emt.options[index].value;
 
-
+	//現在時間の表示
+	document.getElementById("now_time").innerHTML = getNowTime();
 
 	getTime(xml_data);
-
 }
+
 
 function show_info(){
 	document.getElementById("info").innerHTML = infomation;
@@ -284,10 +407,280 @@ function hide_info(){
 	document.getElementById("info_btn").onclick = new Function("show_info()");
 }
 
+function optset(){
+	var index = document.getElementById("root").selectedIndex;
+	var line = document.getElementById("root").options[index].value;
+	if(line == 0){
+		document.getElementById("root").size= 7;
+	}else{
+		document.getElementById("root").size= 1;
+	}
+}
+
+//お気に入り
+function myfavMenu(){
+	//cookie error 時強制的に削除する
+	//alert(document.cookie);
+	//mayfavDel_all();
+
+	if (!navigator.cookieEnabled) {
+		alert("ブラウザの設定にてクッキーの受け入れを有効にしてください。");
+		return;
+	}
+
+	//var MyFav_count = 4;
+	//MyFavStop[1] = {root: 2 , stop:  5 , name: '堀内東'};
+
+	var info = "お気に入りのバス停<br />";
+
+	var stopName = "";
+	var divStyle = "";
+
+ 	for(var i = 1 ; i <=MyFav_count ; i++){
+
+		stopName = MyFavStop[i]['name'];
+		if(stopName == ""){
+			stopName = "☆" + i;
+			divStyle = "";
+		}else{
+			divStyle  = "background-color:" + bc[MyFavStop[i]['root']]['bg'] + ";";
+			divStyle += "color:" + bc[MyFavStop[i]['root']]['txt'] + ";";
+		}
+
+		info += "<div style='" + divStyle + "'>";
+		info += "<input name='mfset' type='radio' value='" + i + "' />";
+		info += stopName + "</div>";
+	}
+
+	info += "<input type='button' onclick='myfavSet()' value='登録' />";
+	info += "<input type='button' onclick='myfavDel()' value='削除' />";
+	info += "<input type='button' onclick='myfavClose()' value='中止' />";
+	
+	document.getElementById("info").innerHTML = info;
+}
+
+function myfavSet(){
+	//日付データを作成する
+	//expires=' + new Date(2030, 1).toUTCString();
+	var date1 = new Date(2030, 1).toUTCString();
+	//2030年1月 日付データをセットする
+
+	if(Root_no == null || Root_stop_no == null || Root_stop_no == 0){
+		alert("バス停を指定してください");
+	}else{
+		//Root_no
+		//Root_stop_no
+		var emt   = document.getElementById("stop");
+		var index = emt.selectedIndex;
+		var stop_name = emt.options[index].text;
+
+		var radioList  = document.getElementsByName("mfset");
+		var fno;
+		var str = stop_name + "登録できません。";
+
+		for(var i=0; i<radioList.length; i++){
+			if (radioList[i].checked) {
+				
+				//** cookie set
+				fno = radioList[i].value;
+				document.cookie = "root" + fno + "=" + Root_no + ";expires=" + date1;
+				document.cookie = "stop" + fno + "=" + Root_stop_no + ";expires=" + date1; 
+				document.cookie = "name" + fno + "=" + escape(stop_name) + ";expires=" + date1;
+			
+				str = stop_name + "を☆" +  radioList[i].value + "に登録しました。";
+				resetRoot();
+
+				break;
+			}
+		}
+		alert(str);
+	}
+}
+
+//cookie 強制削除
+function mayfavDel_all(){
+	//日付データを作成する
+	var date1 = new Date();
+	//1970年1月1日00:00:00の日付データをセットする
+	date1.setTime(0);
+  	//有効期限を過去にして書き込む
+	for(var i=0; i<4 ; i++){
+		//** cookie set
+		fno = i;
+		document.cookie = "root" + fno + "=;expires=" + date1.toGMTString();
+		document.cookie = "stop" + fno + "=;expires=" + date1.toGMTString(); 
+		document.cookie = "name" + fno + "=;expires=" + date1.toGMTString();
+	}
+
+}
+
+
+function myfavDel(){
+	//日付データを作成する
+	var date1 = new Date();
+	//1970年1月1日00:00:00の日付データをセットする
+	date1.setTime(0);
+  	//有効期限を過去にして書き込む
+
+	var radioList  = document.getElementsByName("mfset");
+	var fno;
+	var str = "削除できません。";
+
+	for(var i=0; i<radioList.length; i++){
+		if (radioList[i].checked) {
+			//** cookie set
+			fno = radioList[i].value;
+			document.cookie = "root" + fno + "=;expires=" + date1.toGMTString();
+			document.cookie = "stop" + fno + "=;expires=" + date1.toGMTString(); 
+			document.cookie = "name" + fno + "=;expires=" + date1.toGMTString();
+			
+			str = "☆" +  radioList[i].value + "から削除しました。";
+			//document.cookie = "counts=;expires="+date1.toGMTString();
+
+			resetRoot();
+
+			break;
+		}
+	}
+	alert(str);
+}
+
+
+function myfavClose(){
+	document.getElementById("info").innerHTML = "";
+}
+
+function myfav(no){
+	var f_root = MyFavStop[no]['root'];
+	var f_stop = MyFavStop[no]['stop'];
+
+	if(f_root == "" || f_stop == "" || f_stop == 0){
+		return;
+	}
+
+	Root_stop_no = f_stop;
+	selectRoot(f_root);
+
+	//サイトでは、バス停リストの作成に遅延あり。一定タイミング後に実施
+	setTimeout('myfav_later()' , 500);
+	//localの場合はＯＫ
+
+	/* myfav_later() で実行
+	document.getElementById("stop").selectedIndex = f_stop;
+	document.getElementById("stop").options[f_stop].selected = true;
+
+	selectStop();
+	*/
+}
+
+//myfav() 後処理
+function myfav_later(){
+	/*
+	document.getElementById("stop").selectedIndex = Root_stop_no;
+	document.getElementById("stop").options[Root_stop_no].selected = true;
+	*/
+
+	var emt = document.getElementById("stop");
+	var cnt = emt.length;
+	for(var i = 0 ; i< cnt ; i++){
+		if(Root_stop_no == emt.options[i].value){
+			emt.selectedIndex = i;
+			emt.options[i].selected = true;
+
+			break;
+		}
+	}
+
+	selectStop();
+}
+
+function getCookie(key) {
+	// Cookieから値を取得する
+	var cookieString = document.cookie;
+	// 要素ごとに ";" で区切られているので、";" で切り出しを行う
+	var cookieKeyArray = cookieString.split(";");
+
+	// 要素分ループを行う
+	for (var i=0; i<cookieKeyArray.length; i++) {
+		var targetCookie = cookieKeyArray[i];
+		// 前後のスペースをカットする
+		targetCookie = targetCookie.replace(/^\s+|\s+$/g, "");
+
+		var valueIndex = targetCookie.indexOf("=");
+		if (targetCookie.substring(0, valueIndex) == key) {
+			// キーが引数と一致した場合、値を返す
+			return unescape(targetCookie.slice(valueIndex + 1));
+		}
+	}
+	return "";
+}
+
 </script>
 
 <style type="text/css">
+body{
+	width:100%;
+	margin:0px;
+	padding:0px;
+}
 
+#header_box,#stop_box,#time_box,#footer_box{
+	text-align:center;
+	font-size:20px;
+	}
+#info{
+	text-align:left;
+	padding-left:5px;
+	padding-right:5x;
+	}
+
+#root_box{
+	clear:left;
+	}
+
+#bus_no_time,#time_table{
+	width : 200px;
+	text-align:left;
+	margin:auto;
+	}
+
+#bus_no_time{
+	background-color : #e6e6fa;
+	padding:5px;
+	font-size:20px;
+	}
+#time_table{
+	font-size:25px;
+	}
+#stop{
+	height:40px;
+	font-size:20px;
+	}
+
+#favorite{
+	margin:0px;
+	padding:0px;
+	width:100%;
+	text-align:left;
+	}
+
+#favorite ul{
+	text-align:left;
+	margin:0px;
+	padding:0px;
+	}
+
+#favorite li{
+	float: left;
+	width: 19%;
+	margin:0px;
+	padding: 10px 0px 10px 0px;
+	border: 1px #ffb366 solid;
+	background-color: #fffdee;
+	text-align: center;
+	list-style-type: none;
+	font-size:11px;
+	}
 
 </style>
 
@@ -299,29 +692,41 @@ function hide_info(){
 
 
 <div id="header_box">
-バスは今どこ？時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
+ののいち　バス時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
 	<div id="cont_ver">version</div>
 	<div id="info"></div>
 </div>
 
+<ul id="favorite">
+	<li id="fav0" onclick="myfavMenu()">★Menu</li>
+	<li id="fav1" onclick="myfav(1)">☆１</li>
+	<li id="fav2" onclick="myfav(2)">☆２</li>
+	<li id="fav3" onclick="myfav(3)">☆３</li>
+	<li id="fav4" onclick="myfav(4)">☆４</li>
+</ul>
+
 <div id="root_box">
-<form name="data" id="data">
-<select id="root"><option value="00" selected>-----ルート-----　　</option></select>
+	<div id="select_root" onclick="resetRoot()">
+	</div>
+	<div id="root">
+	</div>
 </div>
+
 <div id="stop_box">
-<select id="stop"><option value="00" selected>-----バス停-----　　</option></select>
+	<select id="stop">
+			<option value="00" selected>-----バス停-----　　</option>
+	</select>
 </div>
+
 <div id="time_box">
+	<div id="now_time"></div>
 	<div id="bus_no_time"></div>
 	<div id="time_table"></div>
 </div>
+
 <div id="footer_box">
-<td><div id="rivisionday"></div>
-</form>
+	<div id="rivisionday"></div>
 </div>
 
-
 </body>
-
 </html>
-
