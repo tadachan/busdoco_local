@@ -1,5 +1,9 @@
 CACHE MANIFEST
+<<<<<<< HEAD
 # ver. 0.95_05_50
+=======
+# ver. 0.95_05_10
+>>>>>>> gh-pages
 # time_tableを変更した場合は、必ずこのマニフェストファイルの内容を変更すること
 CACHE:
 time_table.xml
