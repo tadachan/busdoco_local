@@ -25,10 +25,12 @@
 
 //設定変更エリア*********
 var xml_data   = "time_table.xml";
-var cont_ver   = "ver. 0.95_05_55";
+var cont_ver   = "ver. 0.95_05_60";
 
 var infomation = ""
++"・お気に入りのバス停は、１０カ所まで登録できます。トップ画面のタブは、４つに限定しています。<br />";
 +"・このアプリは、<a href='http://www.city.nonoichi.lg.jp/shiminkyoudou/opendata/opendata_top.html' target='_blank'>野々市市のオープンデータ</a>を活用しています。<br />"
++"・のっティ、のんキー以外の時刻表は、事業者からの転載情報です。<br />";
 +"・年末年始は、一部のバス便が運休となりますので、ご注意ください。<a href='http://www.city.nonoichi.lg.jp/kikaku/kotsu/notty.html' target='_blank'>野々市市のＨＰ参照</a><br />"
 +"・HTML5 manifest に対応しているブラウザでは、オフラインで表示することができます。<br />"
 +"・オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。<br />"
@@ -47,7 +49,7 @@ bc[2] = { bg: '#ff0033' , txt: '#ffffff'};	//root_no =2 中央ルート
 bc[3] = { bg: '#ffcc00' , txt: '#000000'};	//root_no =3 南部ルート
 bc[4] = { bg: '#66ccff' , txt: '#000000'};	//root_no =4 西部ルート
 bc[5] = { bg: '#cc00ff' , txt: '#ffffff'};	//root_no =5 のんキー下り
-bc[6] = { bg: '#cc55ff' , txt: '#000000'};	//root_no =6 のんキー上り
+bc[6] = { bg: '#cc00ff' , txt: '#000000'};	//root_no =6 のんキー上り
 bc[7] = { bg: '#88aa88' , txt: '#ffffff'};	//root_no =7 石川線平日上り
 bc[8] = { bg: '#88aa88' , txt: '#000000'};	//root_no =8 石川線平日下り
 bc[9] = { bg: '#ddddcc' , txt: '#ff0000'};	//root_no =9 石川線休日上り
