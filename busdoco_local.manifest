@@ -1,9 +1,10 @@
 CACHE MANIFEST
-# ver. 0.95_05_00
+# ver. 0.95_05_05
 # time_tableを変更した場合は、必ずこのマニフェストファイルの内容を変更すること
 CACHE:
 time_table.xml
 jquery-1.6.2.min.js
+img/icon_nonoichi_bus_timetable.png
 NETWORK:
 # 今回は指定しません 
 FALLBACK:
