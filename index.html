@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
-<html manifest="busdoco_local.manifest">
+<!--html manifest="busdoco_local.manifest"-->
+<html>
 
 <head>
 
@@ -492,7 +493,7 @@ function myfavMenu(){
 	info += "<input type='button' onclick='myfavDel()' value='削除' />";
 	info += "<input type='button' onclick='myfavClose()' value='中止' />";
 	
-	document.getElementById("info").innerHTML = info;
+	document.getElementById("favInfo").innerHTML = info;
 }
 
 function myfavSet(){
@@ -583,7 +584,7 @@ function myfavDel(){
 
 
 function myfavClose(){
-	document.getElementById("info").innerHTML = "";
+	document.getElementById("favInfo").innerHTML = "";
 }
 
 function myfav(no){
@@ -671,6 +672,13 @@ body{
 	padding-right:5x;
 	}
 
+#favInfo{
+	clear:left;
+	text-align:left;
+	padding-left:5px;
+	padding-right:5x;
+	}
+
 #root_box{
 	clear:left;
 	}
@@ -727,13 +735,6 @@ body{
 
 <body onload="init()">
 
-
-<div id="header_box">
-ののいち　バス時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
-	<div id="cont_ver">version</div>
-	<div id="info"></div>
-</div>
-
 <ul id="favorite">
 	<li id="fav0" onclick="myfavMenu()">★Menu</li>
 	<li id="fav1" onclick="myfav(1)">☆１</li>
@@ -749,6 +750,8 @@ body{
 	<li id="fav9" onclick="myfav(9)">☆9</li-->
 
 </ul>
+<div id="favInfo"></div>
+
 
 <div id="root_box">
 	<div id="select_root" onclick="resetRoot()">
@@ -771,6 +774,13 @@ body{
 
 <div id="footer_box">
 	<div id="rivisionday"></div>
+</div>
+
+
+<div id="header_box">
+ののいち　バス時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
+	<div id="cont_ver">version</div>
+	<div id="info"></div>
 </div>
 
 </body>
