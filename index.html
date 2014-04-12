@@ -19,7 +19,8 @@
 
 <title>ののいち　バス時刻表</title>
 
-<script src="jquery-1.6.2.min.js"></script>
+<!--script src="jquery-1.6.2.min.js"></script-->
+<script src="jquery-1.11.0.min.js"></script>
 
 <script type="text/javascript">
 
@@ -56,11 +57,15 @@ bc[8] = { bg: '#88aa88' , txt: '#000000'};	//root_no =8 石川線平日下り
 bc[9] = { bg: '#ddddcc' , txt: '#ff0000'};	//root_no =9 石川線休日上り
 bc[10] = { bg: '#ddddcc' , txt: '#0088dd'};	//root_no =10 石川線休日下り
 
+//ルート表示バーのスタイル
 var bc_style = '/*border:1px #ffb366 solid;*/ padding:10px; height:30px; vertical-align: middle;  text-align: center;';
+//ルート情報バーのスタイル
+var stop_style = 'padding-left:60px; text-align:left;';
+var time_style = 'padding-left:20px; text-align:left;';
 
 //バス便エリアの装飾
 var no_border  = "text-align:center; padding:5px;";
-var this_stop  = "<font color='red'>●</font>";
+var this_stop  = " ●";
 var other_stop = "　";
 //***********************
 
@@ -81,6 +86,13 @@ MyFavStop[9] = {root: 6 , stop:  4 , name: '粟田'};
 MyFavStop[10] = {root: 6 , stop:  4 , name: '粟田'};
 //***********************
 function getMyFav(){
+	var emt;
+	for(var s = 1 ; s<= MyFav_tab ; s++){
+		emt = document.getElementById("fav" + s);
+		emt.innerHTML = "☆" + s;
+		emt.style.cssText = document.getElementById("fav0").style.cssText;
+	}
+
 	for(var i = 1; i<= MyFav_count ; i++){		
 		MyFavStop[i]['root'] = getCookie("root"+i);
 		MyFavStop[i]['stop'] = getCookie("stop"+i);
@@ -111,23 +123,10 @@ function getRoot(url){
 	//ルート名・コードを抽出し、SELECT ボックスに設定
 	var var_root_no;
 
-	$(xml).find('[nodeName="time_table"]').each(function(){
+	//$(xml).find('[nodeName="time_table"]').each(function(){
+	$(xml).find("time_table").each(function(){
 
 		$(this).find("root_info").each(function(){
-			/*
-			wopt = document.createElement('option');
-			var_root_no = $(this).attr("root_no");
-
-			wopt.setAttribute('value', $(this).attr("root_no"));
-			$(wopt).append($(this).attr("bus_type"));
-			$(wopt).append($(this).attr("root_name"));
-
-			//option area color set***
-			wopt.setAttribute('style' , 'background-color : ' + bc[var_root_no]['bg'] + "; color:" +  bc[var_root_no]['txt']);
-
-			//************
-			*/
-
 			wopt = document.createElement('div');
 			var_root_no = $(this).attr("root_no");
 
@@ -138,8 +137,22 @@ function getRoot(url){
 
 			wopt.setAttribute('onclick' , 'selectRoot(' + var_root_no + ');');
 			wopt.setAttribute('id' , 'root_' + var_root_no);
+
+			//class アコーディオン用
+			wopt.setAttribute('class' , 'root_class');
+
 			$('#root').append(wopt);
+
 			Rivisionday[var_root_no] = $(this).attr("rivisionday");  
+
+			//ルート別のデータ表示エリア
+			wopt = document.createElement('div');
+			wopt.setAttribute('style' , stop_style + 'background-color : ' + bc[var_root_no]['bg'] + "; color:" +  bc[var_root_no]['txt'] + ";");
+			wopt.setAttribute('id' , 'root_data_' + var_root_no);
+			wopt.setAttribute('class' , 'root_data_class');
+
+			$('#root').append(wopt);
+
 		});
 	});
 
@@ -157,22 +170,34 @@ function getStop(url){
 
   	success: function(xml){
 	//ルートコードからバス停名を抽出し、SELECT ボックスに設定
-	$(xml).find('[nodeName="root_info"]').each(function(){
+	//$(xml).find('[nodeName="root_info"]').each(function(){
+	$(xml).find("root_info").each(function(){
 
 		if($(this).attr("root_no") == Root_no){
 			$(this).find("bus_stop_info").each(function(){
-				wopt = document.createElement('option');
+				wopt = document.createElement('div');
 				stop_no = $(this).attr("bus_stop_no");
-				wopt.setAttribute('value' , stop_no);
 
-				$(wopt).append(stop_no + ":");
+				$(wopt).append(stop_no + "：");
 				$(wopt).append($(this).attr("bus_stop_name"));
-				$('#stop').append(wopt);
+				wopt.setAttribute('onclick' , 'selectStop(' + stop_no + ');');
+				wopt.setAttribute('id' , 'stop_' + stop_no);
+
+				$('#root_data_' + Root_no).append(wopt);
+
+				//バス停別のデータ表示エリア
+				wopt = document.createElement('div');
+				wopt.setAttribute('style' , time_style + 'background-color : ' + bc[Root_no]['bg'] + "; color:" +  bc[Root_no]['txt'] + ";");
+
+				wopt.setAttribute('id' , 'stop_data_' + stop_no);
+				wopt.setAttribute('class' , 'stop_data_class');
+
+				$('#root_data_' + Root_no).append(wopt);
 			});
 		}//end if
 	});
 
-	$('#stop').bind('change', selectStop);
+	//$('#stop').bind('change', selectStop);
 
 	}//end access:
 	});//end ajax
@@ -188,35 +213,95 @@ function getTime(url){
   	success: function(xml){
 	var buff = "";
 	var time = "";
+	var bus_stop_no = "";
+	var bus_stop_name = "";
 	var root_bus_no = "";
 
-	//ルートコード、バス停コードからバス停時刻表を抽出し、SELECT ボックスに設定
-	$(xml).find('[nodeName="root_info"]').each(function(){
+	var DD = new Date();
+	var Hours = DD.getHours();
+	//var Hours = 9;
+	var Minutes = DD.getMinutes();
+	//var Minutes = 10;
+	var Seconds = DD.getSeconds();
+	//var Seconds = 30;
+
+	var nowTime = Hours * 3600 + Minutes * 60 + Seconds;
+	var cmpTime;
+	var time_flg = false;
+	if(Hours < 10)   Hours   = "0" + Hours;
+	if(Minutes < 10) Minutes = "0" + Minutes;
+
+	//ルートコード、バス停コードからバス停時刻表を抽出
+	$(xml).find("root_info").each(function(){
 
 		if($(this).attr("root_no") == Root_no){
 			$(this).find("bus_stop_info").each(function(){
-
 				if($(this).attr("bus_stop_no") == Root_stop_no){
-					$(this).find('[nodeName="time_data"]').each(function(){
+					//バス停の情報
+					bus_stop_name = $(this).attr("bus_stop_name");
+					Root_stop_name = bus_stop_name;
+
+					$(this).find("time_data").each(function(){
+
+						bus_stop_no = $(this).attr("bus_stop_no");
 						root_bus_no = $(this).attr("root_bus_no");
+
 						time  = $(this).attr("bus_start_time");
 
 						if(time == "00:00:00"){
 							time = $(this).attr("bus_arive_time");
 						}
 
-						buff += "<a href='#' onclick='view_bus_no(" + root_bus_no + ")'>";
-						buff += root_bus_no + "便　";
-						buff += time.substr(0,time.length -3);
-						buff += "</a>";
-						buff += "<br />";
+						//時刻比較
+						cmpTime = parseInt(time.substr(0,2)) * 3600 + parseInt(time.substr(3,2)) * 60 + parseInt(time.substr(6,2));
+						if(!time_flg && (nowTime < cmpTime)){
+							//alert("cmpTime = " + cmpTime + "/ nowTime= " + nowTime);
+
+							wopt = document.createElement('div');
+							$(wopt).append("<<現在　" + Hours + ":" + Minutes + ">>");
+							$('#stop_data_' + Root_stop_no).append(wopt);
+
+							time_flg = true;
+						}
+
+
+						wopt = document.createElement('div');
+						$(wopt).append(root_bus_no + "便　");
+						$(wopt).append(time.substr(0,time.length -3));
+
+						wopt.setAttribute('onclick' , 'selectBus(' + root_bus_no + ');');
+						wopt.setAttribute('id' , 'bus_' + root_bus_no);
+
+						$('#stop_data_' + Root_stop_no).append(wopt);
+
+
+						//バス便別のデータ表示エリア
+						wopt = document.createElement('div');
+						wopt.setAttribute('style' , time_style + 'background-color : ' + bc[Root_no]['bg'] + "; color:" +  bc[Root_no]['txt'] + ";");
+
+						wopt.setAttribute('id' , 'bus_data_' + root_bus_no);
+						wopt.setAttribute('class' , 'bus_data_class');
+
+						$('#stop_data_' + Root_stop_no).append(wopt);
 					});
+
+					if(!time_flg){
+						//alert("cmpTime = " + cmpTime + "/ nowTime= " + nowTime);
+
+						wopt = document.createElement('div');
+						$(wopt).append("<<現在　" + Hours + ":" + Minutes + ">>");
+						$('#stop_data_' + Root_stop_no).append(wopt);
+
+						time_flg = true;
+					}
+
 				} //end if
 			});
 		}//end if
 	});
 
-	document.getElementById("time_table").innerHTML = buff;
+	//document.getElementById("time_table").innerHTML = buff;
+	//document.getElementById("stop_data_" + Root_stop_no).innerHTML = buff;
 
 	}//end saccess:
 	});//end ajax
@@ -235,20 +320,23 @@ function getBusTime(url){
 
   	success: function(xml){
 	var title = "<div style='" + no_border + " background:" + bc[Root_no]['bg'] + "; color:" + bc[Root_no]['txt'] + ";'>" + Root_bus_no + "便　" + "<input type='button' value='閉じる' onclick='clearBusTime()'></div>";
-	var buff  = title;
+	//var buff  = title;
+	var buff = "";
 	var bus_stop_name = "";
 	var bus_stop_no = "";
 	var time = "";
 
 	//ルートコード、バス停コードからバス停時刻表を抽出し、SELECT ボックスに設定
-	$(xml).find('[nodeName="root_info"]').each(function(){
+	//$(xml).find('[nodeName="root_info"]').each(function(){
+	$(xml).find("root_info").each(function(){
 		if($(this).attr("root_no") == Root_no){
 			$(this).find("bus_stop_info").each(function(){
 						
 				bus_stop_name = $(this).attr("bus_stop_name");
 				bus_stop_no   = $(this).attr("bus_stop_no");
 
-				$(this).find('[nodeName="time_data"]').each(function(){
+				//$(this).find('[nodeName="time_data"]').each(function(){
+				$(this).find("time_data").each(function(){
 					if($(this).attr("root_bus_no") == Root_bus_no){
 						time  = $(this).attr("bus_start_time");
 						if(time == "00:00:00"){
@@ -273,8 +361,10 @@ function getBusTime(url){
 		}//end if
 
 	});
-	document.getElementById("bus_no_time").innerHTML = buff + title + "";
-	document.getElementById("bus_no_time").style.visibility="visible";
+	//document.getElementById("bus_no_time").innerHTML = buff + title + "";
+	//document.getElementById("bus_no_time").style.visibility="visible";
+
+	$('#bus_data_' + Root_bus_no).append(buff);
 
 	}//end access:
 	});//end ajax
@@ -284,10 +374,13 @@ function getBusTime(url){
 
 
 
+var Root_count;
 var Root_no;
 
 var Root_stop_no;
+var Root_stop_name;
 var Root_bus_no;
+
 
 //var Update;
 var Rivisionday = new Array();
@@ -296,12 +389,51 @@ var Rivisionday = new Array();
 
 function init(){
 	document.getElementById("cont_ver").innerHTML = cont_ver;
+	document.getElementById("info").innerHTML = infomation;
+
+	//ルート情報の取得
 	getRoot(xml_data);
 
-	//バス停 select　バス便　box　非表示
+
+	//バス停 select　バス便　box 非表示(hidden)
 	document.getElementById("stop").style.visibility="hidden";
 	document.getElementById("bus_no_time").style.visibility="hidden";
 
+	//時刻表 box 非表示(display)
+	document.getElementById("stop_box").style.display = "none";
+	document.getElementById("time_box").style.display = "none";
+	document.getElementById("footer_box").style.display = "none";
+
+	//お気に入り初期化
+	favInit();
+
+	//****************
+
+	//アコーディオン
+	//infomation
+	$(function() {
+		$("#info").hide();
+		$("#stitle" ).on("click" , function(){
+			$("#info").slideToggle("slow");
+
+			var targetY = $(this).offset().top;
+			$("html,body").animate({scrollTop:targetY},{duration: 1000});
+		});
+	});
+
+	//favorite
+	$(function() {
+		$("#favInfo").hide();
+		$("#fav0" ).on("click" , function(){
+			$("#favInfo").slideToggle("slow");
+		});
+	});
+
+	//*****************
+}
+
+//お気に入り初期化
+function favInit(){
 	//*** cookie *****
 	getMyFav();
 
@@ -328,8 +460,6 @@ function init(){
 			fav_i.style.color      = bc[MyFavStop[i]['root']]['txt'];			
 		}
 	}
-	//****************
-
 }
 
 function resetRoot(){
@@ -365,63 +495,119 @@ function clearStop(){
 }
 
 
+//ルート選択フラグ
+
+var Root_open_flg = false;
 
 function selectRoot(no){
 
-	clearStop();
-	//clearTime_table
-	document.getElementById("time_table").innerHTML = "";
+	//accordion 開いている　情報を一旦閉じる
+	var elm = $("#root_data_" + Root_no);
+	elm.slideUp("slow",function(){
+		//scroll up タイミング合わせ
+		var targetY = $("#root_" + no).offset().top;
+		$("html,body").animate({scrollTop:targetY},{duration: 1000});
+	});
 
-	//clearBusTime
-	document.getElementById("bus_no_time").innerHTML = "";
-	document.getElementById("bus_no_time").style.visibility="hidden";
+	//div stop_ タグの削除
+	var div_elm = document.getElementById("root_data_" + Root_no);
+	if(div_elm) div_elm.innerHTML = "";
+
+	//選択したルートを開く（同じルートの場合は閉じる）
+	if(Root_open_flg && no == Root_no){
+		Root_open_flg = false;
+		Root_no = 0;
+		Root_stop_no = 0;
+	}else{
+		//バス停選択は一旦クリア
+		Root_stop_no = 0;
+
+		Root_no = no;
+		getStop(xml_data);
+
+		$("#root_data_" + no).slideDown("slow",function(){
+			//scroll up タイミング合わせ
+			var targetY = $("#root_" + no).offset().top;
+			$("html,body").animate({scrollTop:targetY},{duration: 1000});
+		});
+
+		Root_open_flg = true;	
+	}
 
 
-	Root_no = no;	
-	var copy  = document.getElementById("select_root");
-	var souce = document.getElementById("root_" + Root_no);
-
-	//add on messege
-	var add_Msg = '<br /><font size="1">（クリックでルート選択）</font>';
-	
-
-	//select root css all copy
-	copy.innerHTML        = souce.innerHTML + add_Msg;
-	copy.style.cssText    = souce.style.cssText;
-
-	//root block none
-	document.getElementById("root").style.display = "none";
-
-	//バス停 select　表示
-	document.getElementById("stop").style.visibility="visible";
-
-	//
-	getStop(xml_data);
 
 	document.getElementById("rivisionday").innerHTML = "改正：" + Rivisionday[Root_no];
 
 }
 
+var Stop_open_flg = false;
+
+function selectStop(no){
 
 
-function selectStop(){
-	//clearBusTime
-	document.getElementById("bus_no_time").innerHTML = "";
-	document.getElementById("bus_no_time").style.visibility="hidden";
+	//accordion 開いている　情報を一旦閉じる
+	var elm = $("#stop_data_" + Root_stop_no);
+	elm.slideUp("slow",function(){
+		//scroll up タイミング合わせ
+		var targetY = $("#stop_" + no).offset().top;
+		$("html,body").animate({scrollTop:targetY},{duration: 1000});
+	});
 
-	var emt   = document.getElementById("stop");
+	//div stop_data_ タグの削除
+	var div_elm = document.getElementById("stop_data_" + Root_stop_no);
+	if(div_elm) div_elm.innerHTML = "";
 
-	var index = emt.selectedIndex;
+	//選択したバス停を開く（同じバス停の場合は閉じる）
+	if(Stop_open_flg && no == Root_stop_no){
+		Stop_open_flg = false;
 
-	Root_stop_no = emt.options[index].value;
+		Root_stop_no = 0;
+	}else{
+		Root_stop_no = no;
+		getTime(xml_data);
 
-	//現在時間の表示
-	document.getElementById("now_time").innerHTML = getNowTime();
-
-	getTime(xml_data);
+		$("#stop_data_" + no).slideDown("slow",function(){
+			var targetY = $("#stop_" + no).offset().top;
+			$("html,body").animate({scrollTop:targetY},{duration: 1000});
+		});
+		Stop_open_flg = true;	
+	}
 }
 
 
+var Bus_open_flg = false;
+
+function selectBus(no){
+	//accordion 開いている　情報を一旦閉じる
+	var elm = $("#bus_data_" + Root_bus_no);
+	elm.slideUp("slow",function(){
+		//scroll up タイミング合わせ
+		var targetY = $("#bus_" + no).offset().top;
+		$("html,body").animate({scrollTop:targetY},{duration: 1000});
+	});
+
+	//div stop_data_ タグの削除
+	var div_elm = document.getElementById("bus_data_" + Root_bus_no);
+	if(div_elm) div_elm.innerHTML = "";
+
+	//選択したバスを開く（同じバスの場合は閉じる）
+	if(Bus_open_flg && no == Root_bus_no){
+		Bus_open_flg = false;
+
+		Root_bus_no = 0;
+	}else{
+		Root_bus_no = no;
+		getBusTime(xml_data);
+
+		$("#bus_data_" + no).slideDown("slow",function(){
+			var targetY = $("#bus_" + no).offset().top;
+			$("html,body").animate({scrollTop:targetY},{duration: 1000});
+		});
+		Bus_open_flg = true;	
+	}
+}
+
+/*
 function show_info(){
 	document.getElementById("info").innerHTML = infomation;
 	document.getElementById("info_btn").value = "閉じる";
@@ -433,6 +619,7 @@ function hide_info(){
 	document.getElementById("info_btn").value = "説明";
 	document.getElementById("info_btn").onclick = new Function("show_info()");
 }
+*/
 
 function optset(){
 	var index = document.getElementById("root").selectedIndex;
@@ -502,14 +689,18 @@ function myfavSet(){
 	var date1 = new Date(2030, 1).toUTCString();
 	//2030年1月 日付データをセットする
 
-	if(Root_no == null || Root_stop_no == null || Root_stop_no == 0){
+	if(Root_no == null || Root_no == 0 || Root_stop_no == null || Root_stop_no == 0){
 		alert("バス停を指定してください");
 	}else{
 		//Root_no
 		//Root_stop_no
+		//Root_stop_name
+		/*
 		var emt   = document.getElementById("stop");
 		var index = emt.selectedIndex;
 		var stop_name = emt.options[index].text;
+		*/
+		var stop_name = Root_stop_no + ":" + Root_stop_name;
 
 		var radioList  = document.getElementsByName("mfset");
 		var fno;
@@ -525,12 +716,15 @@ function myfavSet(){
 				document.cookie = "name" + fno + "=" + escape(stop_name) + ";expires=" + date1;
 			
 				str = stop_name + "を☆" +  radioList[i].value + "に登録しました。";
-				resetRoot();
+				//favInfo を閉じてからリセットルート
+				myfavClose();
+				//resetRoot();
+				favInit();
 
 				break;
 			}
 		}
-		alert(str);
+		//alert(str);
 	}
 }
 
@@ -574,17 +768,22 @@ function myfavDel(){
 			str = "☆" +  radioList[i].value + "から削除しました。";
 			//document.cookie = "counts=;expires="+date1.toGMTString();
 
-			resetRoot();
+			//favInfo を閉じてからリセットルート
+			myfavClose();
+			//resetRoot();
+			favInit();
 
 			break;
 		}
 	}
-	alert(str);
+	//alert(str);
 }
 
 
 function myfavClose(){
-	document.getElementById("favInfo").innerHTML = "";
+	$("#favInfo").slideUp("slow");
+
+	//document.getElementById("favInfo").innerHTML = "";
 }
 
 function myfav(no){
@@ -595,41 +794,30 @@ function myfav(no){
 		return;
 	}
 
-	Root_stop_no = f_stop;
+	//すべての選択を閉じる。フラグのリセット
+	$("#stop_data_" + Root_stop_no).slideUp("slow");
+	$("#root_data_" + Root_no).slideUp("slow");
+	Root_open_flg = false;
+	Stop_open_flg = false;
+
+
 	selectRoot(f_root);
 
+	setTimeout('selectStop(' + f_stop + ')' , 1000);
+
+	//selectStop(f_stop);
+
 	//サイトでは、バス停リストの作成に遅延あり。一定タイミング後に実施
-	setTimeout('myfav_later()' , 500);
-	//localの場合はＯＫ
+	//setTimeout('myfav_later()' , 1000);
 
-	/* myfav_later() で実行
-	document.getElementById("stop").selectedIndex = f_stop;
-	document.getElementById("stop").options[f_stop].selected = true;
-
-	selectStop();
-	*/
 	myfavClose();
 }
 
 //myfav() 後処理
 function myfav_later(){
-	/*
-	document.getElementById("stop").selectedIndex = Root_stop_no;
-	document.getElementById("stop").options[Root_stop_no].selected = true;
-	*/
-
-	var emt = document.getElementById("stop");
-	var cnt = emt.length;
-	for(var i = 0 ; i< cnt ; i++){
-		if(Root_stop_no == emt.options[i].value){
-			emt.selectedIndex = i;
-			emt.options[i].selected = true;
-
-			break;
-		}
-	}
-
-	selectStop();
+	//バス停位置をトップにスライドする
+	var targetY = $('#stop_' + Root_stop_no).offset().top;
+	$("html,body").animate({scrollTop:targetY});
 }
 
 function getCookie(key) {
@@ -660,6 +848,7 @@ body{
 	width:100%;
 	margin:0px;
 	padding:0px;
+	font-size:20px;
 }
 
 #header_box,#stop_box,#time_box,#footer_box{
@@ -670,6 +859,7 @@ body{
 	text-align:left;
 	padding-left:5px;
 	padding-right:5x;
+	font-size:12px;
 	}
 
 #favInfo{
@@ -776,11 +966,10 @@ body{
 	<div id="rivisionday"></div>
 </div>
 
-
 <div id="header_box">
-ののいち　バス時刻表 <input id="info_btn" type="button" value="説明" onclick="show_info()" />
-	<div id="cont_ver">version</div>
+	<div id="stitle">ののいち　バス時刻表</div>
 	<div id="info"></div>
+	<div id="cont_ver">version</div>
 </div>
 
 </body>
