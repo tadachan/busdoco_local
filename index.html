@@ -27,15 +27,17 @@
 
 //設定変更エリア*********
 var xml_data   = "time_table.xml";
-var cont_ver   = "ver. 0.95_05_70";
+var cont_ver   = "ver. 1.0";
 
 var infomation = ""
 +"・お気に入りのバス停は、１０カ所まで登録できます。トップ画面のタブは、４つに限定しています。<br />"
++"・使用方法などは、<a href='info/infomation.html' target='_blank'>こちらのマニュアル</a>をご覧ください。<br />"
 +"・このアプリは、<a href='http://www.city.nonoichi.lg.jp/shiminkyoudou/opendata/opendata_top.html' target='_blank'>野々市市のオープンデータ</a>を活用しています。<br />"
 +"・のっティ、のんキー以外の時刻表は、事業者からの転載情報です。<br />"
 +"・年末年始は、一部のバス便が運休となりますので、ご注意ください。<a href='http://www.city.nonoichi.lg.jp/kikaku/kotsu/notty.html' target='_blank'>野々市市のＨＰ参照</a><br />"
 +"・HTML5 manifest に対応しているブラウザでは、オフラインで表示することができます。<br />"
-+"・オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。<br />"
++"・オンラインで抽出エラーになる場合は、ブラウザのキャッシュを一旦クリアしてください。<br /><br />"
++"アプリ作成：カメリア・パルの会　のっティ部会（協力：Spending Nonoichi）<br />"
 +"";
 //本ファイル、データファイルなどを変更した場合は、マニフェストファイルも変更すること
 //manifest = "busdoco_local.manifest"
@@ -855,6 +857,9 @@ body{
 	text-align:center;
 	font-size:20px;
 	}
+#slavel{
+	font-size:10px;
+	}
 #info{
 	text-align:left;
 	padding-left:5px;
@@ -967,7 +972,9 @@ body{
 </div>
 
 <div id="header_box">
-	<div id="stitle">ののいち　バス時刻表</div>
+	<div id="stitle">ののいち　バス時刻表
+		<div id="slavel">（取扱説明）</div>
+	</div>
 	<div id="info"></div>
 	<div id="cont_ver">version</div>
 </div>
