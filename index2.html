@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html manifest="busdoco_local.manifest">
+<html>
 <head>
 
 <meta name="viewport" content="initial-scale=1.0, user-scalable=yes" />
@@ -228,7 +228,7 @@ function getTime(url){
 
 	var DD = new Date();
 	var Hours = DD.getHours();
-	//var Hours = 9;
+	//var Hours = 8;
 	var Minutes = DD.getMinutes();
 	//var Minutes = 10;
 	var Seconds = DD.getSeconds();
@@ -236,6 +236,7 @@ function getTime(url){
 
 	var nowTime = Hours * 3600 + Minutes * 60 + Seconds;
 	var cmpTime;
+
 	var time_flg = false;
 	if(Hours < 10)   Hours   = "0" + Hours;
 	if(Minutes < 10) Minutes = "0" + Minutes;
